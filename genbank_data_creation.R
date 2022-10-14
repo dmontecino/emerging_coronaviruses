@@ -9,6 +9,7 @@ library(myTAI)
 library(purrr)
 library(plyr)
 
+#Genbank search test
 #((((deltacoronavirus) NOT human) NOT homo) NOT sapiens) 
 #((((gammacoronavirus) NOT human) NOT homo) NOT sapiens) 
 #((((betacoronavirus) NOT human) NOT homo) NOT sapiens) 
@@ -17,14 +18,16 @@ library(plyr)
 
 # load previous data
 
-file.paths=grep("genbank_exported_from_Geneious_Prime", list.files("/Users/DMontecino/Documents/CoV_Wildlife/Data/"), value = T)
+your_directory="/Users/DMontecino/Documents/CoV_Wildlife/" 
+
+file.paths=grep("genbank_exported_from_Geneious_Prime", list.files(paste0(your_directory, "Data/")), value = T)
 
 
-all.sequence.data=mclapply(file.paths, function(x) read.csv(paste0("/Users/DMontecino/Documents/CoV_Wildlife/Data/", x)), mc.cores = 6)
+all.sequence.data=mclapply(file.paths, function(x) read.csv(paste0(your_directory, "Data/", x)), mc.cores = 6)
 
 # if the sequence column is present take it out
 all.sequence.data=mclapply(all.sequence.data, function(x) if("Sequence" %in% colnames(x)) x%>%dplyr::select(-Sequence) else x, mc.cores = 6)
-  
+
 
 #removing all homo sapiens host
 
@@ -72,7 +75,7 @@ dat=dat%>%filter(host!="Vero E6")
 # test=unlist(sapply(dat$host, function(x) if(length(x)>0) strsplit(x, split = ";")[[1]] else x), use.names = F)
 
 # all(sapply(test, length, USE.NAMES = F)==1)
-      
+
 
 dat$host[which(grepl(";", dat$host))]=sapply(strsplit(dat$host[which(grepl(";", dat$host))], split = ";"), "[[", 1)
 
@@ -155,7 +158,7 @@ dat=dat[dat$Description!="Structure of SARS-CoV-2 replication-transcription comp
 
 # dat=dat[!(grepl(pattern = "Severe acute respiratory syndrome coronavirus 2 isolate ", dat$Description)),]
 temp=dat[grepl(pattern = "Severe acute respiratory syndrome coronavirus 2 isolate ", dat$Description),]
-unique(temp$host)
+# unique(temp$host)
 
 # all hosts only first word capitalized
 
@@ -178,19 +181,6 @@ dat$host=sapply(dat$host, function(x)
   else gsub(" ", replacement = "", x = x), USE.NAMES = F)
 
 
-# dat=dat[dat$Created.Date!="Wed Aug 26 00:00:00 PDT 2020",]
-# 
-# dat=dat[!(dat$host=="" & 
-#       dat$Organism=="Severe acute respiratory syndrome coronavirus 2" &
-#       dat$Created.Date=="Tue Dec 01 00:00:00 PST 2020"),]
-
-
-# dat=dat[!(dat$host=="" & 
-#         dat$Organism=="Severe acute respiratory syndrome coronavirus 2"),]
-# 
-# dat=dat[!(dat$host=="" & dat$Organism=="Middle East respiratory syndrome-related coronavirus"),]
-# 
-# dat=dat[!(dat$host=="" & dat$Organism=="Murine hepatitis virus"),]
 
 dat[dat$host=="Cattle egret",]$host="Bubulcus ibis"
 dat[dat$host=="Watusi cattle",]$host="Bos taurus"
@@ -218,7 +208,6 @@ dat$host[grepl("Brentgoose", dat$host)]="Branta bernicla"
 dat$host[grepl("Buffalo", dat$host)]="Bovidae sp"
 dat$host[grepl("Familiaris", dat$host)]="Canis familiaris"
 dat$host[grepl("Canine", dat$host)]="Canidae sp"
-# dat[dat$host%in%unique(grep(pattern = "Cattle egret", dat$host, value = T, ignore.case = T)), ]$host="Bubulcus ibis"
 dat$host[grepl("Canis lupus famaliaris", dat$host)]="Canis lupus familiaris"
 dat$host[grepl("Coot", dat$host)]="Fulica sp"
 dat$host[grepl("Common pheasant", dat$host)]="Phasianus colchicus"
@@ -419,9 +408,9 @@ dat=dat[!(grepl("Human|human", x = dat$Description) & dat$host==""),]
 
 dat=dat[dat$host!="",]
 
-#  De;ete observations with unknown host
+#  Delete observations with unknown host
 
-nrow(dat) # 26527
+# nrow(dat) # 26527
 
 
 
@@ -433,39 +422,27 @@ nrow(dat) # 26527
 ######################################
 
 
-Sys.setenv(ENTREZ_KEY='3715d8f9fde19f739d106dfc25f5c28ec509')
+Sys.setenv(ENTREZ_KEY='your_key')
 
 hosts=sort(unique(dat$host))
-# 
-# order=vector(mode = "list", length = length(hosts))
-# 
-# for(i in 1:length(hosts)){ #nrow(dat)up to  5487
-# 
-#   order[[i]]=
-# 
-#     taxonomy( organism = hosts[i],
-#               db       = "ncbi",
-#               output   = "classification")#}
-# 
-#   cat(paste0(i, " "))}
+
+order=vector(mode = "list", length = length(hosts))
+
+for(i in 1:length(hosts)){ #nrow(dat)up to  5487
+  
+  order[[i]]=
+    
+    taxonomy( organism = hosts[i],
+              db       = "ncbi",
+              output   = "classification")#}
+  
+  cat(paste0(i, " "))}
 
 
-# saveRDS(order, "/Users/DMontecino/Documents/CoV_Wildlife/Data/host_species_order.RDS")
-order.temp<-readRDS("/Users/DMontecino/Documents/CoV_Wildlife/Data/host_species_order.RDS")
+saveRDS(order, paste0(your_directory, "/Data/host_species_order.RDS"))
+order.temp<-readRDS(paste0(your_directory, "/Data/host_species_order.RDS"))
 
 
-
-
-
-
-
-# which(sapply(order, function(x) any(is.na(x[,1]))))
-# 
-# hosts[which(sapply(order, function(x) any(is.na(x[,1]))))]
-
-# hosts[which(sapply(order, nrow)==1)]
-
-# order[hosts[which(sapply(order, nrow)==1)]]
 
 
 taxonomy= lapply(order.temp, function(x) x[x$rank%in%c("class", "order", "family", "genus"),])
@@ -476,7 +453,7 @@ taxonomy[[which(sapply(order.temp, nrow)==1)[1]]]=data.frame(
   name=c("Aves", "Pelecaniformes", "Ardeidae", "Egretta"),
   rank=c("class", "order", "family", "genus"),
   id=NA)
-  
+
 #Hipposideros melanopogon"
 taxonomy[[which(sapply(order.temp, nrow)==1)[2]]]=data.frame(
   name=c("Mammalia", "Chiroptera", "Hipossideridae", "Hipposideros"),
@@ -515,8 +492,6 @@ taxonomy[[which(sapply(order.temp, nrow)==1)[6]]]=data.frame(
 for(i in 1:length(taxonomy)){
   
   taxonomy[[i]]<-pivot_wider(taxonomy[[i]]%>%select(-id), names_from = rank, values_from = name)}
-
-# taxonomy[[433]]
 
 taxonomy<-rbind.fill(taxonomy)
 
@@ -568,30 +543,11 @@ dat$CoV_genus[beta.index]="Betacoronavirus"
 dat$CoV_genus[gamma.index]="Gammacoronavirus"
 dat$CoV_genus[delta.index]="Deltacoronavirus"
 
-#rmove Brazil results that are argued in other papers
-#dat[dat$CoV_genus=="Betacoronavirus" & dat$class=="Aves",]
+#rmove Brazil results that are argued as wrong in other papers
 dat=dat[!(dat$CoV_genus=="Betacoronavirus" & dat$class=="Aves"),]
 
-# table(dat$CoV_genus, dat$class)
 
-
-
-
-# indexes.alpha=which(sapply(sapply(temp, function(x) grepl("Alphacoronavirus", x)), any))
-# indexes.beta=which(sapply(sapply(temp, function(x) grepl("Betacoronavirus", x)), any))
-# indexes.gamma=which(sapply(sapply(temp, function(x) grepl("Gammacoronavirus", x)), any))
-# indexes.delta=which(sapply(sapply(temp, function(x) grepl("Deltacoronavirus", x)), any))
-# 
-# 
-# sum(length(indexes.alpha), length(indexes.beta), length(indexes.gamma), length(indexes.delta))==nrow(dat)
-# 
-# 
-# unique(sapply(temp[indexes.alpha], function(x) x[length(x)]))
-# unique(sapply(temp[indexes.beta], function(x) x[length(x)]))
-# unique(sapply(temp[indexes.gamma], function(x) x[length(x)]))
-# unique(sapply(temp[indexes.delta], function(x) x[length(x)]))
-
-
+# Adding subgenera for betaconronaviruses
 dat$subgenus=NA
 
 dat[grep("Sarbeco|sarbeco", dat$Taxonomy, ignore.case = T),]$subgenus="Sarbeco"
@@ -600,7 +556,7 @@ dat[grep("Embeco|embeco", dat$Taxonomy, ignore.case = T),]$subgenus="Embeco"
 dat[grep("Nobeco|nobeco", dat$Taxonomy, ignore.case = T),]$subgenus="Nobeco"
 dat[grep("Hibeco|hibeco", dat$Taxonomy, ignore.case = T),]$subgenus="Hibeco"
 
- # nrow(dat[dat$CoV_genus!="Betacoronavirus" & !is.na(dat$subgenus),])==0
+# nrow(dat[dat$CoV_genus!="Betacoronavirus" & !is.na(dat$subgenus),])==0
 
 # table(dat$CoV_genus, dat$subgenus,  useNA = "always")
 
@@ -608,7 +564,7 @@ dat<-dat%>%distinct()
 
 dat<-dat[!is.na(dat$Name), ]
 
-nrow(dat) # 26437
+#nrow(dat) # 26437
 
 
 #######################################
@@ -759,7 +715,7 @@ nrow(dat) # 26437
 # ##############################################
 # ####### Adding the link information ##########
 # ##############################################
- 
+
 
 # link.info.all=vector(mode = "list", length(unique.pubmed.id))
 # 
@@ -821,10 +777,10 @@ saveRDS(dat, "/Users/DMontecino/Documents/CoV_Wildlife/Data/COV_data_Feb_12_2022
 
 # References
 journal.title=
-str_to_title(
-trimws(
-  sapply(strsplit(publication.info.all$fulljournalname, split = "[\\:,(]"), "[[", 1), 
-  which = "right"))
+  str_to_title(
+    trimws(
+      sapply(strsplit(publication.info.all$fulljournalname, split = "[\\:,(]"), "[[", 1), 
+      which = "right"))
 
 journal.title<-gsub(pattern = " Of ", replacement = " of ", x = journal.title)
 journal.title<-gsub(pattern = " And ", replacement = " and ", x = journal.title)
@@ -844,25 +800,25 @@ publication.info.all$title<-gsub("..", ".", paste(publication.info.all$title, ".
 
 
 references=
-
-paste(
-# authors
-sapply(lapply(publication.info.all$authors, function(x) x$name), function(y) paste(y, collapse = ", ")),
-". ", 
-#year
-publication.info.all$pubdate, 
-". ", 
-#title
-publication.info.all$title,
-" ",
-# journal
-journal.title,
-#volume
-" (", publication.info.all$volume, ") ",
-#pages
-publication.info.all$pages,
-
-sep = "")
+  
+  paste(
+    # authors
+    sapply(lapply(publication.info.all$authors, function(x) x$name), function(y) paste(y, collapse = ", ")),
+    ". ", 
+    #year
+    publication.info.all$pubdate, 
+    ". ", 
+    #title
+    publication.info.all$title,
+    " ",
+    # journal
+    journal.title,
+    #volume
+    " (", publication.info.all$volume, ") ",
+    #pages
+    publication.info.all$pages,
+    
+    sep = "")
 
 
 trimws(references, which = "right")
