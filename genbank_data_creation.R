@@ -23,8 +23,7 @@ library(plyr)
 
 file.paths=grep("genbank_exported_from_Geneious_Prime", list.files("Data/"), value = T)
 
-
-all.sequence.data=mclapply(file.paths, function(x) read.csv(paste0(your_directory, "Data/", x)), mc.cores = 6)
+all.sequence.data=mclapply(file.paths, function(x) read.csv(paste0("Data/", x)), mc.cores = 6)
 
 # if the sequence column is present take it out
 all.sequence.data=mclapply(all.sequence.data, function(x) if("Sequence" %in% colnames(x)) x%>%dplyr::select(-Sequence) else x, mc.cores = 6)
@@ -418,32 +417,31 @@ dat=dat[dat$host!="",]
 
 
 
-######################################
-######### GET THE TAXONOMY ###########
-######################################
+####################################
+####### Adding host taxonomy #######
+####################################
 
-Sys.setenv(ENTREZ_KEY='your_key')
-
+# ---- run lines 426 to 442 to generate the host_species_order.RDS object
+# Sys.setenv(ENTREZ_KEY='your_key')
+#
+# 
 hosts=sort(unique(dat$host))
+# 
+# order=vector(mode = "list", length = length(hosts))
+# 
+# for(i in 1:length(hosts)){ #nrow(dat)up to  5487
+#   
+#   order[[i]]=
+#     
+#     taxonomy( organism = hosts[i],
+#               db       = "ncbi",
+#               output   = "classification")#}
+#   
+#   cat(paste0(i, " "))}
+#
+# saveRDS(order,"Data/host_species_order.RDS")
 
-order=vector(mode = "list", length = length(hosts))
-
-for(i in 1:length(hosts)){ #nrow(dat)up to  5487
-  
-  order[[i]]=
-    
-    taxonomy( organism = hosts[i],
-              db       = "ncbi",
-              output   = "classification")#}
-  
-  cat(paste0(i, " "))}
-
-#data is already available in the folder
-#saveRDS(order,"Data/host_species_order.RDS")
 order.temp<-readRDS("Data/host_species_order.RDS")
-
-
-
 
 taxonomy= lapply(order.temp, function(x) x[x$rank%in%c("class", "order", "family", "genus"),])
 
@@ -456,7 +454,7 @@ taxonomy[[which(sapply(order.temp, nrow)==1)[1]]]=data.frame(
 
 #Hipposideros melanopogon"
 taxonomy[[which(sapply(order.temp, nrow)==1)[2]]]=data.frame(
-  name=c("Mammalia", "Chiroptera", "Hipossideridae", "Hipposideros"),
+  name=c("Mammalia", "Chiroptera", "Hipposideridae", "Hipposideros"),
   rank=c("class", "order", "family", "genus"),
   id=NA)
 
@@ -487,8 +485,6 @@ taxonomy[[which(sapply(order.temp, nrow)==1)[6]]]=data.frame(
 
 
 
-
-
 for(i in 1:length(taxonomy)){
   
   taxonomy[[i]]<-pivot_wider(taxonomy[[i]]%>%select(-id), names_from = rank, values_from = name)}
@@ -497,6 +493,7 @@ taxonomy<-rbind.fill(taxonomy)
 
 taxonomy$host=hosts
 
+# join the taxonomy to the data
 
 dat=left_join(dat, taxonomy%>%select(class, host), by="host" )
 dat=left_join(dat, taxonomy%>%select(class, order, host), by=c("class", "host"))
@@ -513,6 +510,10 @@ dat$species[is.na(dat$genus)]=NA
 dat[dat$species%in%unique(dat[which(lengths(strsplit(dat$species, " "))==1),]$host), ]$species=NA
 
 
+
+
+
+
 ################################################
 ####### Adding CoV genus and subgenus ##########
 ################################################
@@ -521,11 +522,6 @@ dat[dat$species%in%unique(dat[which(lengths(strsplit(dat$species, " "))==1),]$ho
 # table(dat$CoV_genus, useNA = "always")
 
 temp=strsplit(dat$Taxonomy, ";")
-
-# table(unlist(sapply(temp, function(x) grep(pattern = "Alpha|alpha", x, value = T))))
-# table(unlist(sapply(temp, function(x) grep(pattern = "Beta|beta", x, value = T))))
-# table(unlist(sapply(temp, function(x) grep(pattern = "Gamma|gamma", x, value = T))))
-# table(unlist(sapply(temp, function(x) grep(pattern = "Delta|delta", x, value = T))))
 
 alpha.index=which(sapply(temp, function(x) any(grepl(pattern = "Alpha|alpha", x))))
 beta.index=which(sapply(temp, function(x) any(grepl(pattern = "Beta|beta", x))))
@@ -567,118 +563,126 @@ dat<-dat[!is.na(dat$Name), ]
 #nrow(dat) # 26437
 
 
-#######################################
-####### Geting the PUBMED.id ##########
-#######################################
-
-
-names=unique(dat$Name)
-
-PUBMED.id=c()
-
-for(i in seq(names)){
-
-  tryCatch({
-  if(grepl("PUBMED", entrez_fetch(db="nuccore", id =names[i], rettype = "gb"))){
-
-    PUBMED.id[i]=strsplit(strsplit(entrez_fetch(db="nuccore", id =names[i], rettype = "gb"), "PUBMED")[[1]][2], "\n  ")[[1]][1]}else{
-
-        PUBMED.id[i]="No PUBMED id"}
-
-    #data is already available in the folder
-  #saveRDS(PUBMED.id, "Data/pubids_2022.RDS")
-
-  cat(paste0(i, " "))}, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
-
-}
 
 
 
+########################################
+####### Getting the PUBMED.id ##########
+########################################
 
+# ---- run lines 575 to 614 to generate the pubids_2022.RDS object
 
-PUBMED.id=gsub(pattern = "   ", "", x = PUBMED.id)
-
-PUBMED.id=sapply(strsplit(PUBMED.id, "\n"), function(x)x[[1]])
-
-PUBMED.id=data.frame(Name=names, pubid=PUBMED.id)
-
-PUBMED.id<-left_join(PUBMED.id, dat%>%select(Name, Accession)%>%distinct, by="Name")
-
-PUBMED.id[is.na(PUBMED.id$pubid),]$pubid=c(17533554, 17533554, 27178127, "No PUBMED id",
-                                           30209269, 21500655, "No PUBMED id", "No PUBMED id",
-                                           20556502, 20556502, "No PUBMED id", 7710354,
-                                           7710354, 7710354, 24613433, NA, 32475435)
-
-PUBMED.id=PUBMED.id[-22356,]
-
+# names=unique(dat$Name)
+# 
+# PUBMED.id=c()
+# 
+# for(i in seq(names)){
+# 
+#   tryCatch({
+#   if(grepl("PUBMED", entrez_fetch(db="nuccore", id =names[i], rettype = "gb"))){
+# 
+#     PUBMED.id[i]=strsplit(strsplit(entrez_fetch(db="nuccore", id =names[i], rettype = "gb"), "PUBMED")[[1]][2], "\n  ")[[1]][1]}else{
+# 
+#         PUBMED.id[i]="No PUBMED id"}
+# 
+#     #data is already available in the folder
+#   #saveRDS(PUBMED.id, "Data/pubids_2022.RDS")
+# 
+#   cat(paste0(i, " "))}, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+# 
+# }
+# 
+# 
+# 
+# 
+# 
+# PUBMED.id=gsub(pattern = "   ", "", x = PUBMED.id)
+# 
+# PUBMED.id=sapply(strsplit(PUBMED.id, "\n"), function(x)x[[1]])
+# 
+# PUBMED.id=data.frame(Name=names, pubid=PUBMED.id)
+# 
+# PUBMED.id<-left_join(PUBMED.id, dat%>%select(Name, Accession)%>%distinct, by="Name")
+# 
+# PUBMED.id[is.na(PUBMED.id$pubid),]$pubid=c(17533554, 17533554, 27178127, "No PUBMED id",
+#                                            30209269, 21500655, "No PUBMED id", "No PUBMED id",
+#                                            20556502, 20556502, "No PUBMED id", 7710354,
+#                                            7710354, 7710354, 24613433, NA, 32475435)
+# 
+# PUBMED.id=PUBMED.id[-22356,]
+#
 #saveRDS(PUBMED.id, Data/pubids_2022.RDS")
+
 PUBMED.id<-readRDS("Data/pubids_2022.RDS")
 
-
-
+#join the pubmed id data 
 
 dat=left_join(dat, PUBMED.id%>%dplyr::select(Name, pubid)%>%distinct(), by = c("Name"))
 
 
 
-# #####################################################
-# ####### Adding the publication information ##########
-# #####################################################
+#####################################################
+####### Adding the publication information ##########
+#####################################################
 
-unique.pubmed.id=unique(dat$pubid)
-unique.pubmed.id=unique.pubmed.id[unique.pubmed.id!="No PUBMED id"]
+# ---- run lines 630 to 682 to generate the pubinfo_2022.RDS object
+
+# unique.pubmed.id=unique(dat$pubid)
+# unique.pubmed.id=unique.pubmed.id[unique.pubmed.id!="No PUBMED id"]
+# 
+# 
+# publication.info.all=vector(mode = "list", length(unique.pubmed.id))
+# 
+# for(i in seq(unique.pubmed.id)){
+# 
+#   tryCatch({
+#   if(unique.pubmed.id[i]!="No PUBMED id" & !(is.na(unique.pubmed.id[i]))){
+# 
+#     multi_summs <- entrez_summary(db="pubmed", id=unique.pubmed.id[i])
+# 
+# 
+#     date_and_cite <- extract_from_esummary(multi_summs, c("uid",
+#                                                           "pubdate",
+#                                                           "title",
+#                                                           "authors",
+#                                                           "volume",
+#                                                           "fulljournalname",
+#                                                           "pages"))
+# 
+# 
+#     publication.info=data.frame(t(date_and_cite))
+# 
+#     publication.info.all[[i]]=publication.info}
+# 
+#   saveRDS(publication.info.all, "Data/pubinfo_2022.RDS")
+# 
+# 
+#   cat(paste0(i, " "))
+# }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+# }
+# 
+# 
+# # for 25779817 it is actually 25889235
+# multi_summs <- entrez_summary(db="pubmed", id=25889235)
+# 
+# 
+# date_and_cite <- extract_from_esummary(multi_summs, c("uid",
+#                                                       "pubdate",
+#                                                       "title",
+#                                                       "authors",
+#                                                       "volume",
+#                                                       "fulljournalname",
+#                                                       "pages"))
+# 
+# 
+# publication.info=data.frame(t(date_and_cite))
+# 
+# publication.info.all[[which(unique.pubmed.id=="25779817")]]=publication.info
+#
+# saveRDS(publication.info.all, "Data/pubinfo_2022.RDS")
 
 
 
-publication.info.all=vector(mode = "list", length(unique.pubmed.id))
-
-for(i in seq(unique.pubmed.id)){
-
-  tryCatch({
-  if(unique.pubmed.id[i]!="No PUBMED id" & !(is.na(unique.pubmed.id[i]))){
-
-    multi_summs <- entrez_summary(db="pubmed", id=unique.pubmed.id[i])
-
-
-    date_and_cite <- extract_from_esummary(multi_summs, c("uid",
-                                                          "pubdate",
-                                                          "title",
-                                                          "authors",
-                                                          "volume",
-                                                          "fulljournalname",
-                                                          "pages"))
-
-
-    publication.info=data.frame(t(date_and_cite))
-
-    publication.info.all[[i]]=publication.info}
-
-  # saveRDS(publication.info.all, "Data/pubinfo_2022.RDS")
-
-
-  cat(paste0(i, " "))
-}, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
-}
-
-
-# for 25779817 it is actually 25889235
-multi_summs <- entrez_summary(db="pubmed", id=25889235)
-
-
-date_and_cite <- extract_from_esummary(multi_summs, c("uid",
-                                                      "pubdate",
-                                                      "title",
-                                                      "authors",
-                                                      "volume",
-                                                      "fulljournalname",
-                                                      "pages"))
-
-
-publication.info=data.frame(t(date_and_cite))
-
-publication.info.all[[which(unique.pubmed.id=="25779817")]]=publication.info
-
-#saveRDS(publication.info.all, "Data/pubinfo_2022.RDS")
 
 publication.info.all<-readRDS("Data/pubinfo_2022.RDS")
 
@@ -707,7 +711,7 @@ names(publication.info.all)<-c("pubid", "authors","pubdate", "title", "fulljourn
 
 publication.info.all$pubdate<-sapply(strsplit(publication.info.all$pubdate, split = " "), "[[", 1)
 
-
+#join the publication information data
 
 dat=left_join(dat, publication.info.all, by = c("pubid"))
 
@@ -715,7 +719,12 @@ dat=left_join(dat, publication.info.all, by = c("pubid"))
 
 
 
+
+
+# remove other data
+
 dat=dat[!(grepl("passage|culture|experiment", x = dat$Description, ignore.case = T)),]
+
 dat=dat[!(grepl("passage|vaccine|culture|experiment", x = dat$title, ignore.case = T)),]
 
 # nrow(dat) #26154

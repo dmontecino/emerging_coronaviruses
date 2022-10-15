@@ -17,7 +17,7 @@ gb.all[is.na(gb.all$species),]$species="Unknown"
 
 
 
-# editing error in genbank based on the paper
+# editing error in genbank based on the original paper
 gb.all[which(gb.all$class=="Bivalvia"),]$host="Chaerephon plicatus"
 gb.all[which(gb.all$class=="Bivalvia"),]$species="Chaerephon plicatus"
 gb.all[which(gb.all$class=="Bivalvia"),]$genus="Chaerephon"
@@ -25,7 +25,7 @@ gb.all[which(gb.all$class=="Bivalvia"),]$family="Molossidae"
 gb.all[which(gb.all$class=="Bivalvia"),]$order="Chiroptera"
 gb.all[which(gb.all$class=="Bivalvia"),]$class="Mammalia"
 
-# subset the data to summarize
+# subset columns to summarize
 gb=unique(gb.all[, c("CoV", "CoV_genus", "subgenus", "class", "order", "family", "species")])
 
 #number of host species
