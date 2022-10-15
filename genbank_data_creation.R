@@ -16,11 +16,12 @@ library(plyr)
 #((((alphacoronavirus) NOT human) NOT homo) NOT sapiens) 
 #((((coronavirus) NOT human) NOT homo) NOT sapiens)   
 
-# load previous data
+# load data
+#remember to download the files in here 
+#https://drive.google.com/drive/u/0/folders/1Ty-mPdDAKPGYe2M-SYzAJwEQByE433qq 
+#and place them in the "Data" folder of your cloned repository
 
-your_directory="/Users/DMontecino/Documents/CoV_Wildlife/" 
-
-file.paths=grep("genbank_exported_from_Geneious_Prime", list.files(paste0(your_directory, "Data/")), value = T)
+file.paths=grep("genbank_exported_from_Geneious_Prime", list.files("Data/"), value = T)
 
 
 all.sequence.data=mclapply(file.paths, function(x) read.csv(paste0(your_directory, "Data/", x)), mc.cores = 6)
@@ -439,8 +440,8 @@ for(i in 1:length(hosts)){ #nrow(dat)up to  5487
   cat(paste0(i, " "))}
 
 #data is already available in the folder
-#saveRDS(order, paste0(your_directory, "/Data/host_species_order.RDS"))
-order.temp<-readRDS(paste0(your_directory, "/Data/host_species_order.RDS"))
+#saveRDS(order,"Data/host_species_order.RDS")
+order.temp<-readRDS("Data/host_species_order.RDS")
 
 
 
@@ -586,7 +587,7 @@ for(i in seq(names)){
         PUBMED.id[i]="No PUBMED id"}
 
     #data is already available in the folder
-  #saveRDS(PUBMED.id, paste0(your_directory, "/Data/pubids_2022.RDS"))
+  #saveRDS(PUBMED.id, "Data/pubids_2022.RDS")
 
   cat(paste0(i, " "))}, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
 
@@ -611,8 +612,8 @@ PUBMED.id[is.na(PUBMED.id$pubid),]$pubid=c(17533554, 17533554, 27178127, "No PUB
 
 PUBMED.id=PUBMED.id[-22356,]
 
-#saveRDS(PUBMED.id, paste0(your_directory, "/Data/pubids_2022.RDS"))
-PUBMED.id<-readRDS(paste0(your_directory, "/Data/pubids_2022.RDS"))
+#saveRDS(PUBMED.id, Data/pubids_2022.RDS")
+PUBMED.id<-readRDS("Data/pubids_2022.RDS")
 
 
 
@@ -653,7 +654,7 @@ for(i in seq(unique.pubmed.id)){
 
     publication.info.all[[i]]=publication.info}
 
-  # saveRDS(publication.info.all, paste0(your_directory, /Data/pubinfo_2022.RDS"))
+  # saveRDS(publication.info.all, "Data/pubinfo_2022.RDS")
 
 
   cat(paste0(i, " "))
@@ -678,12 +679,9 @@ publication.info=data.frame(t(date_and_cite))
 
 publication.info.all[[which(unique.pubmed.id=="25779817")]]=publication.info
 
-#saveRDS(publication.info.all, paste0(your_directory, "/Data/pubinfo_2022.RDS"))
+#saveRDS(publication.info.all, "Data/pubinfo_2022.RDS")
 
-
-
-
-publication.info.all<-readRDS(paste0(your_directory, "/Data/pubinfo_2022.RDS"))
+publication.info.all<-readRDS("Data/pubinfo_2022.RDS")
 
 publication.info.all=rbind.fill(publication.info.all)%>%select(uid, authors,pubdate,title,fulljournalname,volume,pages)
 
@@ -724,7 +722,7 @@ dat=dat[!(grepl("passage|vaccine|culture|experiment", x = dat$title, ignore.case
 # nrow(dat) #26154
 
 
-saveRDS(dat, "Data/COV_data_Feb_12_2022.RDS")
+# saveRDS(dat, "Data/COV_data_Feb_12_2022.RDS")
 
 
 
