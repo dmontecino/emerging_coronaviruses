@@ -295,8 +295,8 @@ gb%>%filter(species!="Unknown")%>%pull(family) %>% n_distinct()
   
   cov.hosts.per.order$order<-tolower(cov.hosts.per.order$order)
   
-  aves<-read.csv("/Data/number of species by class and order Aves IUCN.csv")  
-  mammals<-read.csv("/Data/number of species by class and order Mammals IUCN.csv")  
+  aves<-read.csv("Data/number of species by class and order Aves IUCN.csv")  
+  mammals<-read.csv("Data/number of species by class and order Mammals IUCN.csv")  
   
   #names(aves)
   aves$Name<-tolower(aves$Name)
@@ -315,6 +315,6 @@ aves.mammals<-aves.mammals%>%dplyr::rename(order=Name, total=Total)
 aves.mammals$total<-c(177, 384, 6659, 296, 333, 1332, 2375)
 
 prop.hosts.pos.versus.all.hosts.per.order=
-left_join(cov.hosts.per.order,aves.mammals, by = "order")%>%
+left_join(cov.hosts.per.order, aves.mammals, by = "order")%>%
   dplyr::mutate(prop=round(species/total,4)*100)
 
