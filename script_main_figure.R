@@ -422,28 +422,3 @@ ggraph(graph, layout = 'dendrogram', circular = TRUE )  +
   
   
   
-
-  
-  
-  
-  # Collapsible tree with the full data 
-  
-  library(collapsibleTree)
-  library(htmlwidgets)
-  library(stringr)
-  
-  gb.not.unknown[is.na(gb.not.unknown$subgenus), ]$subgenus="Unknown"
-  
-  gb.not.unknown$subgenus<-str_to_title(gb.not.unknown$subgenus)
-  
-    
-  cov.genera.hosts.tree <- collapsibleTree( gb.not.unknown, 
-                        colnames(gb.not.unknown), root = "Coronaviridae")
-  
-  cov.genera.hosts.tree
-  
-  
-  saveWidget(cov.genera.hosts.tree, 
-             file="/Users/DMontecino/Desktop/CoV_dendrogram_interactive.html")
-  
-  
