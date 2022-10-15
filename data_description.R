@@ -318,3 +318,8 @@ prop.hosts.pos.versus.all.hosts.per.order=
 left_join(cov.hosts.per.order, aves.mammals, by = "order")%>%
   dplyr::mutate(prop=round(species/total,4)*100)
 
+
+# number of reports per species
+
+gb.all %>% dplyr::count(species) %>% arrange(-n)
+
