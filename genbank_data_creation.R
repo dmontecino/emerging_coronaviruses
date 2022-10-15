@@ -724,7 +724,7 @@ dat=dat[!(grepl("passage|vaccine|culture|experiment", x = dat$title, ignore.case
 # nrow(dat) #26154
 
 
-saveRDS(dat, paste0(your_directory, "/Data/COV_data_Feb_12_2022.RDS"))
+saveRDS(dat, "Data/COV_data_Feb_12_2022.RDS")
 
 
 
