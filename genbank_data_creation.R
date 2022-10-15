@@ -422,7 +422,6 @@ dat=dat[dat$host!="",]
 ######### GET THE TAXONOMY ###########
 ######################################
 
-
 Sys.setenv(ENTREZ_KEY='your_key')
 
 hosts=sort(unique(dat$host))
