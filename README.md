@@ -21,4 +21,4 @@ To get the descriptive quantities regarding hosts and Orthocoronavirus, run the 
 
 To reproduce the figure 25.2, run the "script_main_figure.R" script.
 
-To visualize the coronavirus - species relationship to the species level, run the "host_coronavirus_widget.R" script and then open the html file "CoV_dendrogram_interactive.html"
+To visualize the coronavirus - species relationship to the species level, run the "host_coronavirus_widget.R" script and download the folders and file in the folder "Cov_hosts"full", and  open the html file "CoV_dendrogram_interactive.html" 
