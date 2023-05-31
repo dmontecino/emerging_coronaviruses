@@ -409,7 +409,7 @@ ggraph(graph, layout = 'dendrogram', circular = TRUE )  +
     ylim(-1.35, 1.35)
   
   
-  dendrogram
+  # dendrogram
   
   
   #ggsave(file="dendrogram_hosts_cov.tiff", plot=dendrogram, width=20, height=20, dpi = 1000, units = "cm")
